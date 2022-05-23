@@ -2,5 +2,3 @@ logging:
   level:
     root: warn
     '[com.promineotech]': debug
-server: 
-  port: 8081
