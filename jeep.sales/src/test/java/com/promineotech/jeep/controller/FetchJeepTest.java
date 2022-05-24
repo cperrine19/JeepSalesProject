@@ -11,6 +11,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.http.HttpMethod;
 
 import com.promineotech.jeep.controller.support.FetchJeepTestSupport;
@@ -19,8 +21,10 @@ import com.promineotech.jeep.entity.JeepModel;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class FetchJeepTest extends FetchJeepTestSupport {
+@Sql(scripts = { "classpath:flyway/migrations/V1.0__Jeep_Schema.sql",
+		"classpath:flyway/migrations/V1.1__Jeep_Data.sql" }, config = @SqlConfig(encoding = "utf-8"))
 
+class FetchJeepTest extends FetchJeepTestSupport {
 
 	@Test
 	void testThatJeepsAreReturnedWhenAValidModelAndTrumAreSupplied() {
@@ -33,16 +37,17 @@ class FetchJeepTest extends FetchJeepTestSupport {
 
 		// When: a connection is made to the URI
 		ResponseEntity<List<Jeep>> response = getRestTemplate().exchange(uri, HttpMethod.GET, null,
-				new ParameterizedTypeReference<>() {});
+				new ParameterizedTypeReference<>() {
+				});
 
 		// Then: a success (OK 200) is returned
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-		
-		//And: the actual list returned is the same as the expected list
+
+		// And: the actual list returned is the same as the expected list
 		List<Jeep> expected = buildExpected();
 		System.out.println(expected);
 		assertThat(response.getBody()).isEqualTo(expected);
-		
+
 	}
 
 	protected List<Jeep> buildExpected() {
