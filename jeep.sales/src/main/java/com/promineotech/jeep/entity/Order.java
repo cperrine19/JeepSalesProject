@@ -17,4 +17,9 @@ public class Order {
 	private Tire tire;
 	private BigDecimal price;
 	private List<Option> options;
+	
+	@JsonIgnore
+	public Long getOrderPK() {
+		return orderPK;
+	}
 }

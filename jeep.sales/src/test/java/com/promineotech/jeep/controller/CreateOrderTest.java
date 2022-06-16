@@ -3,6 +3,7 @@ package com.promineotech.jeep.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpEntity;
@@ -11,9 +12,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.test.jdbc.JdbcTestUtils;
 
 import com.promineotech.jeep.controller.support.CreateOrderTestSupport;
 import com.promineotech.jeep.entity.JeepModel;
@@ -25,12 +28,18 @@ import com.promineotech.jeep.entity.Order;
 		"classpath:flyway/migrations/V1.1__Jeep_Data.sql" }, config = @SqlConfig(encoding = "utf-8"))
 
 class CreateOrderTest extends CreateOrderTestSupport {
+	
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Test
 	void testCreateOrderReturnsSuccess201() {
 		// Given: an order as JSON
 		String body = createOrderBody();
 		String uri = getBaseUriForOrders();
+		
+		int numRowsOrders = JdbcTestUtils.countRowsInTable(jdbcTemplate, "orders");
+		int numRowsOptions = JdbcTestUtils.countRowsInTable(jdbcTemplate, "order_options");
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON); 
@@ -55,6 +64,10 @@ class CreateOrderTest extends CreateOrderTestSupport {
 		assertThat(order.getEngine().getEngineId()).isEqualTo("2_0_TURBO");
 		assertThat(order.getTire().getTireId()).isEqualTo("35_TOYO");
 		assertThat(order.getOptions()).hasSize(6);
+		
+		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "orders")).isEqualTo(numRowsOrders + 1);
+		assertThat(JdbcTestUtils.countRowsInTable(jdbcTemplate, "order_options")).isEqualTo(numRowsOptions + 6);
+
 
 	}
 
